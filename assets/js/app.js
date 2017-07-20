@@ -29,22 +29,22 @@ var trains = [];
 
 firebase.initializeApp(config);
 var db = firebase.database();
+var trainRefresher;
 
 
 var dbObject;
+
+// read database and assign to trains array
 db.ref('trains/').once('value').then(snapshot=>{
   dbObject = snapshot.val();
   for(key in dbObject){
     trains.push(dbObject[key]);
   }
+
+  //populate HTML and create interval to run every minute
   populateTable();
+  trainRefresher = setInterval(populateTable,60000);
 })
-
-for(key in dbObject){
-  console.log(key);
-}
-
-
 
 //train parameter is an object
 function addTrain(train) {
@@ -53,21 +53,9 @@ function addTrain(train) {
 }
 
 
-//
-// // writeUserData('dannynhois','danny','dannynhois@gmaill.com','https://dannynhois.github.io/assets/images/profile_picture.jpg');
-// console.log('app is connected');
-// var divObject = document.getElementById('object');
-// var html;
-// db.ref('users/dannynhois').once('value').then(snapshot => {
-//   console.log(snapshot.val());
-//   var username = snapshot.val().username;
-//   html = username;
-//   // console.log(username):
-// })
-//
-// divObject.innerHTML = html;
 
 function populateTable () {
+  console.log('populateTable');
   var divTable = document.getElementById('train-times');
 
   var html = `<table class='table table-striped table-bordered'>
