@@ -7,32 +7,52 @@ var config = {
   storageBucket: '',
   messagingSenderId: '67730324689'
 };
+var trainId = 'two';
 
-var trains = [
-  {
-    name: 'Bullet',
-    destination: 'Houston',
-    frequency: 60,
-    arrival_time: new Date(2017, 6, 19, 20, 24, 0)
-  },
-  {
-    name: 'Oregon Trail',
-    destination: 'Portland',
-    frequency: 360,
-    arrival_time: new Date(2017, 6, 19, 21, 34, 0)
+// var trains = [
+//   {
+//     name: 'Bullet',
+//     destination: 'Houston',
+//     frequency: 35,
+//     // arrival_time: new Date(2017, 6, 19, 20, 24, 0)
+//     first_train_time: "04:30"
+//   },
+//   {
+//     name: 'Oregon Trail',
+//     destination: 'Portland',
+//     frequency: 16,
+//     first_train_time: "10:30"
+//   }
+// ];
+
+var trains = [];
+
+firebase.initializeApp(config);
+var db = firebase.database();
+
+
+var dbObject;
+db.ref('trains/').once('value').then(snapshot=>{
+  dbObject = snapshot.val();
+  for(key in dbObject){
+    trains.push(dbObject[key]);
   }
-];
-// firebase.initializeApp(config);
+  populateTable();
+})
 
-// var db = firebase.database();
+for(key in dbObject){
+  console.log(key);
+}
 
-// function writeUserData(userId, name, email, imageUrl) {
-//   firebase.database().ref('users/' + userId).set({
-//     username: name,
-//     email: email,
-//     profile_picture : imageUrl
-//   });
-// }
+
+
+//train parameter is an object
+function addTrain(train) {
+  db.ref('trains/').push(train);
+  trainId++;
+}
+
+
 //
 // // writeUserData('dannynhois','danny','dannynhois@gmaill.com','https://dannynhois.github.io/assets/images/profile_picture.jpg');
 // console.log('app is connected');
@@ -64,8 +84,20 @@ function populateTable () {
 
   // loop through object and populate table body
   trains.forEach(train => {
-    var minutesAway = moment(train.arrival_time).diff(moment(), 'minutes');
-    var arrivalTime = moment(train.arrival_time).format('HH:mm');
+    if(!train){
+      return;
+    }
+    var minutesAway = moment(train.first_train_time, 'HH:mm').diff(moment(), 'minutes');
+    var arrivalTime = moment(train.first_train_time, 'HH:mm').format('HH:mm');
+
+    //logic for next arrival
+    while(minutesAway < 0){
+      arrivalTime = moment(arrivalTime, 'HH:mm').add(train.frequency, 'minutes').format('HH:mm');
+      minutesAway = moment(arrivalTime, 'HH:mm').diff(moment(), 'minutes');
+    }
+
+    //convert from military to am/pm
+    arrivalTime = moment(arrivalTime, 'HH:mm').format('hh:mm A');
     // console.log(moment());
     html += `<tr>
                 <th>${train.name}</th>
@@ -79,5 +111,3 @@ function populateTable () {
   html += '</table>';
   divTable.innerHTML = html;
 }
-
-populateTable();
